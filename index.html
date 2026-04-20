@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Regis AI — Face Recognition System</title>
 
-<!-- ═══ MediaPipe Engines ═══ -->
-<script src="https://unpkg.com/@mediapipe/face_mesh@0.4.1633559619/face_mesh.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@mediapipe/drawing_utils@0.3.1620248257/drawing_utils.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@mediapipe/camera_utils@0.3.1620248257/camera_utils.js" crossorigin="anonymous"></script>
+<!-- ═══ MediaPipe Engines (replaces face-api.js) ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -734,7 +734,6 @@ function onMeshResults(results) {
   } else if (mode === 'recognize' && !liveIDActive) {
     liveIDResult = null;
   }
-  if(mode==='enroll'&&isCapturing&&isLocked){
     if(frameBuffer.length<MAX_FRAMES){frameBuffer.push(buildDescriptor(lm));updateBufferStatus();}
     if(frameBuffer.length>=MAX_FRAMES&&isCapturing){isCapturing=false;onEnrollComplete();}
   } else if(mode==='enroll'&&isCapturing&&!isLocked) {
@@ -749,7 +748,7 @@ function onMeshResults(results) {
 function initMediaPipe() {
   setStatus({label:'ENGINE',icon:'⬡',msg:'<span class="spinner"></span>Loading MediaPipe FaceMesh…',cls:'cyan'});
   faceMeshEngine=new FaceMesh({
-    locateFile:f=>`https://unpkg.com/@mediapipe/face_mesh@0.4.1633559619/${f}`
+    locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`
   });
   faceMeshEngine.setOptions({maxNumFaces:1,refineLandmarks:true,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
   faceMeshEngine.onResults(onMeshResults);
