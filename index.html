@@ -115,15 +115,7 @@
   .face-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:12px;transition:border-color 0.3s,background 0.3s;animation:fadeSlide 0.3s ease-out both;}
   @keyframes fadeSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
   .face-card.matched{border-color:rgba(0,255,170,0.5);background:rgba(0,255,170,0.04);}
-  .face-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--violet),var(--cyan));box-shadow:0 0 12px rgba(155,109,255,0.3);font-weight:800;color:#fff;font-family:var(--sans);font-size:0.88rem;flex-shrink:0;overflow:hidden;}
-  .face-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
-  .face-samples{font-size:0.55rem;font-family:var(--mono);color:var(--violet);background:rgba(155,109,255,0.1);border:1px solid rgba(155,109,255,0.2);padding:1px 5px;border-radius:10px;white-space:nowrap;}
-  .threshold-row{display:flex;align-items:center;gap:10px;padding:10px 0 4px;}
-  .threshold-label{font-size:0.6rem;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;white-space:nowrap;}
-  .threshold-val{font-size:0.7rem;font-family:var(--mono);color:var(--cyan);min-width:30px;text-align:right;}
-  input[type=range].threshold-slider{flex:1;accent-color:var(--cyan);height:4px;cursor:pointer;}
-  .match-photo{width:56px;height:56px;border-radius:10px;object-fit:cover;border:2px solid rgba(0,255,170,0.4);flex-shrink:0;}
-  .match-photo-placeholder{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--violet),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
+  .face-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--violet),var(--cyan));box-shadow:0 0 12px rgba(155,109,255,0.3);font-weight:800;color:#fff;font-family:var(--sans);font-size:0.88rem;flex-shrink:0;}
   .face-info{flex:1;min-width:0;}
   .face-name{font-size:0.88rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .face-meta{font-size:0.6rem;font-family:var(--mono);color:var(--muted);letter-spacing:0.05em;margin-top:2px;}
@@ -163,14 +155,6 @@
   .btn-copy-arr{flex:1;font-family:var(--sans);font-size:0.75rem;font-weight:600;background:rgba(0,255,170,0.07);color:var(--green);border:1px solid rgba(0,255,170,0.2);padding:7px 12px;border-radius:7px;cursor:pointer;}
   .btn-copy-arr:hover{background:rgba(0,255,170,0.13);}
 
-  .btn-live-id-on{background:linear-gradient(135deg,var(--green),#00cc88)!important;color:#000!important;border-color:transparent!important;box-shadow:0 0 16px rgba(0,255,170,0.3);}
-  .live-id-label{position:absolute;z-index:15;pointer-events:none;transform:translateX(-50%);}
-  .live-id-name{font-family:var(--mono);font-size:0.72rem;font-weight:700;letter-spacing:0.06em;padding:3px 10px;border-radius:6px;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,0.8);}
-  .live-id-name.matched{background:rgba(0,255,170,0.85);color:#000;}
-  .live-id-name.unmatched{background:rgba(255,68,102,0.85);color:#fff;}
-  .live-id-bar{height:3px;border-radius:2px;margin-top:2px;transition:width 0.3s;}
-  .live-id-bar.matched{background:var(--green);}
-  .live-id-bar.unmatched{background:var(--red);}
   .divider{height:1px;background:var(--border);margin:12px 0;}
   .io-row{display:flex;gap:6px;}
   .scan-progress-wrap{margin-bottom:10px;opacity:0;transition:opacity 0.4s;}
@@ -196,7 +180,7 @@
     <div class="nav-logo">⬡</div>
     <div>
       <span class="nav-title">Regis AI</span>
-      <span class="nav-tag">v5 · Multi-Sample</span>
+      <span class="nav-tag">v4 · MediaPipe</span>
     </div>
   </div>
   <div class="mode-tabs">
@@ -286,10 +270,7 @@
         </div>
       </div>
       <div id="recognize-btn-wrap" style="display:none;">
-        <div style="display:flex;gap:8px;">
-          <button class="btn-primary" id="btn-recognize" style="flex:1;">🔍 Identify Face</button>
-          <button class="btn-secondary" id="btn-live-id" style="flex:1;" onclick="toggleLiveID()">📡 Live ID: OFF</button>
-        </div>
+        <button class="btn-primary" id="btn-recognize" style="width:100%;">🔍 Identify Face</button>
       </div>
     </div>
   </div>
@@ -303,9 +284,6 @@
         <span class="pane-sub" id="face-count-label">0 FACES</span>
       </div>
       <div class="info-body">
-        <div style="background:rgba(155,109,255,0.07);border:1px solid rgba(155,109,255,0.2);border-radius:8px;padding:8px 11px;margin-bottom:10px;font-size:0.67rem;font-family:var(--mono);color:var(--violet);line-height:1.6;letter-spacing:0.03em;">
-          💡 <strong>TIP:</strong> Enroll the same person multiple times (different angles, lighting) to improve recognition accuracy. Each scan adds a new sample.
-        </div>
         <div class="faces-list" id="faces-list">
           <div class="no-faces"><span class="no-faces-icon">👤</span>NO FACES ENROLLED YET<br>SCAN YOUR FACE TO BEGIN</div>
         </div>
@@ -338,14 +316,8 @@
         <span class="pane-sub">COSINE SIMILARITY</span>
       </div>
       <div class="info-body">
-        <div class="threshold-row">
-          <span class="threshold-label">Threshold</span>
-          <input type="range" class="threshold-slider" id="threshold-slider" min="50" max="95" value="72" oninput="onThresholdChange(this.value)">
-          <span class="threshold-val" id="threshold-val">72%</span>
-        </div>
         <div class="match-result" id="match-result">
           <div class="match-header" id="match-header">
-            <div id="match-photo-wrap" class="match-photo-placeholder">👤</div>
             <div>
               <div class="match-label" id="match-label">IDENTITY</div>
               <div class="match-name"  id="match-name">—</div>
@@ -372,17 +344,15 @@
 /* ═══════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════ */
+const MATCH_THRESHOLD = 0.72;
 const MAX_FRAMES      = 20;
 const DESCRIPTOR_DIM  = 468 * 3;
 
-let MATCH_THRESHOLD = 0.72;
 let mode='enroll', isCapturing=false, modelsReady=false, faceDetected=false;
 let enrolledFaces=[], lastDescriptor=null, frameBuffer=[], spiderStable=false;
 let blinkCounter=0, prevEAR=1.0;
 let faceMeshEngine=null, mpCamInstance=null;
 let alsFromHardware=false;
-let liveIDActive=false, liveIDThrottle=0, liveIDResult=null;
-let capturedPhoto=null; // data URL of face snapshot at enrollment
 
 /* DOM */
 const video          = document.getElementById('video');
@@ -414,7 +384,6 @@ const matchDist      = document.getElementById('match-dist');
 const matchDesc      = document.getElementById('match-desc');
 const matchConfBar   = document.getElementById('match-conf-bar');
 const matchConfFill  = document.getElementById('match-conf-fill');
-const matchPhotoWrap = document.getElementById('match-photo-wrap');
 const candidateHdr   = document.getElementById('candidates-header');
 const candidateList  = document.getElementById('candidates-list');
 const toastEl        = document.getElementById('toast');
@@ -424,7 +393,6 @@ const scanProgressWrap  = document.getElementById('scan-progress-wrap');
 const scanProgressFill  = document.getElementById('scan-progress-fill');
 const scanProgressValue = document.getElementById('scan-progress-value');
 
-function onThresholdChange(v){MATCH_THRESHOLD=v/100;document.getElementById('threshold-val').textContent=v+'%';}
 function showToast(msg,dur=2200){toastEl.textContent=msg;toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),dur);}
 function setStatus({box='',label='SYSTEM',icon='⬡',msg='',cls='cyan'}){
   statusBox.className=`status-box ${box}`;statusLabel.textContent=label;
@@ -678,62 +646,8 @@ function onMeshResults(results) {
   ctx.fillStyle=meshColor;
   lm.forEach(pt=>{ctx.beginPath();ctx.arc(pt.x*vw,pt.y*vh,1,0,Math.PI*2);ctx.fill();});
 
-  // Live ID: run recognition every ~8 frames in recognize mode
-  if (mode === 'recognize' && liveIDActive && enrolledFaces.length) {
-    liveIDThrottle++;
-    if (liveIDThrottle >= 8) {
-      liveIDThrottle = 0;
-      const probe = buildDescriptor(lm);
-      const scored = enrolledFaces.map(f => {
-        const descs=f.descriptors||[f.descriptor].filter(Boolean);
-        const sims=descs.map(d=>cosineSimilarity(probe,d));
-        const sim=sims.reduce((a,b)=>a+b,0)/sims.length;
-        return {name: f.name, sim, photo:f.photo||null};
-      }).sort((a,b) => b.sim - a.sim);
-      liveIDResult = scored[0];
-      // Update status box with live result
-      const pctNow = Math.round(liveIDResult.sim * 100);
-      const isMatchNow = liveIDResult.sim >= MATCH_THRESHOLD;
-      setStatus({
-        box: isMatchNow ? 'success' : 'error',
-        label: isMatchNow ? 'IDENTIFIED' : 'UNKNOWN',
-        icon: isMatchNow ? '✓' : '?',
-        msg: isMatchNow
-          ? '<strong>' + liveIDResult.name + '</strong> &mdash; ' + pctNow + '% match'
-          : 'Unknown face (best: ' + liveIDResult.name + ' @ ' + pctNow + '%)',
-        cls: isMatchNow ? 'green' : 'red'
-      });
-    }
-    // Draw name label above the face
-    if (liveIDResult) {
-      const nose = lm[1];
-      const brow = lm[10];
-      const labelX = nose.x * vw;
-      const labelY = Math.max(0, brow.y * vh - 28);
-      const isMatch = liveIDResult.sim >= MATCH_THRESHOLD;
-      const pct = Math.round(liveIDResult.sim * 100);
-      const label = isMatch ? liveIDResult.name : '? Unknown';
-      ctx.save();
-      ctx.font = 'bold 13px "Share Tech Mono", monospace';
-      const tw = ctx.measureText(label).width;
-      const bx = labelX - tw/2 - 8, by = labelY - 18, bw = tw + 16, bh = 22;
-      ctx.fillStyle = isMatch ? 'rgba(0,255,170,0.88)' : 'rgba(255,68,102,0.88)';
-      ctx.beginPath();
-      ctx.roundRect(bx, by, bw, bh, 5);
-      ctx.fill();
-      ctx.fillStyle = isMatch ? '#000' : '#fff';
-      ctx.fillText(label, labelX - tw/2, by + 14);
-      // confidence bar below label
-      const barW = bw;
-      ctx.fillStyle = 'rgba(0,0,0,0.3)';
-      ctx.fillRect(bx, by + bh + 2, barW, 4);
-      ctx.fillStyle = isMatch ? 'rgba(0,255,170,0.9)' : 'rgba(255,68,102,0.9)';
-      ctx.fillRect(bx, by + bh + 2, barW * (pct/100), 4);
-      ctx.restore();
-    }
-  } else if (mode === 'recognize' && !liveIDActive) {
-    liveIDResult = null;
-  }
+  // Buffer accumulation
+  if(mode==='enroll'&&isCapturing&&isLocked&&isLive) {
     if(frameBuffer.length<MAX_FRAMES){frameBuffer.push(buildDescriptor(lm));updateBufferStatus();}
     if(frameBuffer.length>=MAX_FRAMES&&isCapturing){isCapturing=false;onEnrollComplete();}
   } else if(mode==='enroll'&&isCapturing&&!isLocked) {
@@ -760,7 +674,7 @@ function initMediaPipe() {
   mpCamInstance.start().then(()=>{
     modelsReady=true;
     loadFromStorage(); renderFacesList();
-    setStatus({label:'READY',icon:'⬡',msg:'Enter a name & press <strong>Scan</strong>. Re-scan same name to add more samples for better accuracy.',cls:'cyan'});
+    setStatus({label:'READY',icon:'⬡',msg:'Enter a name and press <strong>Scan</strong> to begin',cls:'cyan'});
     enrollForm.style.display='';
     btnEnroll.disabled=true;
     setSensor('ir','active','IR Ready');
@@ -782,14 +696,11 @@ function switchMode(m) {
   enrollForm.style.display=m==='enroll'?'':'none';
   recogBtnWrap.style.display=m==='recognize'?'':'none';
   isCapturing=false; frameBuffer=[]; spiderStable=false; blinkCounter=0;
-  liveIDActive=false; liveIDThrottle=0; liveIDResult=null;
-  const liveBtn=document.getElementById('btn-live-id');
-  if(liveBtn){liveBtn.textContent='📡 Live ID: OFF';liveBtn.classList.remove('btn-live-id-on');}
   scanProgressWrap.classList.remove('visible');
   liveBadge.classList.remove('visible'); livenessAlert.classList.remove('visible');
   scanLine.classList.remove('paused'); overlayCanvas.classList.remove('stable-glow');
   if(m==='enroll'){
-    setStatus({label:'READY',icon:'⬡',msg:'Enter a name & press <strong>Scan</strong>. Re-scan same name to add more samples.',cls:'cyan'});
+    setStatus({label:'READY',icon:'⬡',msg:'Enter a name and press <strong>Scan</strong> to begin',cls:'cyan'});
     nameInput.disabled=false; btnEnroll.disabled=!nameInput.value.trim();
   } else {
     if(!enrolledFaces.length) setStatus({box:'error',label:'NO FACES',icon:'⚠',msg:'Enroll at least one face first.',cls:'red'});
@@ -820,45 +731,15 @@ function onEnrollComplete() {
   if(!master){setStatus({box:'error',label:'ERROR',icon:'⚠',msg:'No descriptor captured. Try again.',cls:'red'});resetEnrollUI();return;}
   const name=nameInput.value.trim();
   const date=new Date().toLocaleString();
-
-  // Capture a photo thumbnail from the video frame
-  let photoDataURL=null;
-  try {
-    const snapCanvas=document.createElement('canvas');
-    snapCanvas.width=80; snapCanvas.height=80;
-    const snapCtx=snapCanvas.getContext('2d');
-    // Mirror to match display
-    snapCtx.translate(80,0); snapCtx.scale(-1,1);
-    snapCtx.drawImage(video,0,0,80,80);
-    photoDataURL=snapCanvas.toDataURL('image/jpeg',0.7);
-  } catch(e){}
-
-  // Check if person already enrolled — if so, add another descriptor sample
-  const existing=enrolledFaces.find(f=>f.name.toLowerCase()===name.toLowerCase());
-  if(existing){
-    existing.descriptors.push(master);
-    existing.photo=photoDataURL||existing.photo;
-    existing.date=date;
-    existing.sampleCount=(existing.sampleCount||1)+1;
-    saveToStorage(); renderFacesList();
-    lastDescriptor=master;
-    showToast('✓ Added sample #'+existing.sampleCount+' for '+name);
-    descNameLbl.textContent=name+' ('+existing.sampleCount+' samples)';
-    descText.textContent=Array.from(master.subarray(0,60)).map(v=>v.toFixed(4)).join(', ')+' …';
-    descPanel.classList.add('visible');
-    stepOverlay.classList.remove('ripple'); void stepOverlay.offsetWidth; stepOverlay.classList.add('ripple');
-    setStatus({box:'success',label:'SAMPLE ADDED',icon:'✓',msg:'<strong>'+name+'</strong> now has '+existing.sampleCount+' samples — more = better accuracy',cls:'green'});
-  } else {
-    enrolledFaces.push({name,descriptors:[master],photo:photoDataURL,date,sampleCount:1});
-    saveToStorage(); renderFacesList();
-    lastDescriptor=master;
-    descNameLbl.textContent=name;
-    descText.textContent=Array.from(master.subarray(0,60)).map(v=>v.toFixed(4)).join(', ')+' …';
-    descPanel.classList.add('visible');
-    stepOverlay.classList.remove('ripple'); void stepOverlay.offsetWidth; stepOverlay.classList.add('ripple');
-    setStatus({box:'success',label:'ENROLLED',icon:'✓',msg:'<strong>'+name+'</strong> enrolled — scan again to add more samples',cls:'green'});
-    showToast('✓ '+name+' enrolled');
-  }
+  enrolledFaces.push({name,descriptor:master,date});
+  saveToStorage(); renderFacesList();
+  lastDescriptor=master;
+  descNameLbl.textContent=name;
+  descText.textContent=Array.from(master.subarray(0,60)).map(v=>v.toFixed(4)).join(', ')+' …';
+  descPanel.classList.add('visible');
+  stepOverlay.classList.remove('ripple'); void stepOverlay.offsetWidth; stepOverlay.classList.add('ripple');
+  setStatus({box:'success',label:'ENROLLED',icon:'✓',msg:'<strong>'+name+'</strong> enrolled with MediaPipe 468-pt mesh',cls:'green'});
+  showToast('✓ '+name+' enrolled');
   resetEnrollUI();
 }
 
@@ -870,38 +751,10 @@ function resetEnrollUI() {
 }
 
 /* ═══════════════════════════════════════════════
-   LIVE ID TOGGLE
-═══════════════════════════════════════════════ */
-function toggleLiveID() {
-  if (!modelsReady) return;
-  if (!enrolledFaces.length) {
-    showToast('⚠ Enroll at least one face first');
-    return;
-  }
-  liveIDActive = !liveIDActive;
-  liveIDThrottle = 0;
-  liveIDResult = null;
-  const btn = document.getElementById('btn-live-id');
-  if (liveIDActive) {
-    btn.textContent = '📡 Live ID: ON';
-    btn.classList.add('btn-live-id-on');
-    setStatus({label:'LIVE ID',icon:'📡',msg:'Continuously identifying faces in real-time…',cls:'green'});
-  } else {
-    btn.textContent = '📡 Live ID: OFF';
-    btn.classList.remove('btn-live-id-on');
-    setStatus({label:'READY',icon:'🔍',msg:'Press <strong>Identify Face</strong> — '+enrolledFaces.length+' face(s) loaded',cls:'cyan'});
-    matchResult.classList.remove('visible');
-    candidateHdr.style.display='none'; candidateList.style.display='none';
-  }
-}
-
-/* ═══════════════════════════════════════════════
    RECOGNIZE FLOW
 ═══════════════════════════════════════════════ */
 document.getElementById('btn-recognize').addEventListener('click', () => {
   if(!modelsReady||!enrolledFaces.length) return;
-  // Turn off live ID if it was running
-  if(liveIDActive){liveIDActive=false;liveIDResult=null;const lb=document.getElementById('btn-live-id');lb.textContent='📡 Live ID: OFF';lb.classList.remove('btn-live-id-on');}
   setStatus({box:'challenge',label:'SCANNING',icon:'🔍',msg:'<span class="spinner"></span>Analyzing face mesh…',cls:'amber'});
   // One-shot capture for recognition
   const oneShotHandler=(results)=>{
@@ -919,13 +772,10 @@ document.getElementById('btn-recognize').addEventListener('click', () => {
 });
 
 function runRecognition(probe) {
-  // Score each enrolled face using best similarity across all their descriptors
-  const scored=enrolledFaces.map(f=>{
-    const descs=f.descriptors||[f.descriptor].filter(Boolean);
-    const sims=descs.map(d=>cosineSimilarity(probe,d));
-    const sim=sims.reduce((a,b)=>a+b,0)/sims.length; // average across samples
-    return {name:f.name, date:f.date, sim, photo:f.photo||null};
-  }).sort((a,b)=>b.sim-a.sim);
+  const scored=enrolledFaces.map(f=>({
+    name:f.name, date:f.date,
+    sim:cosineSimilarity(probe,f.descriptor)
+  })).sort((a,b)=>b.sim-a.sim);
   const best=scored[0];
   const isMatch=best.sim>=MATCH_THRESHOLD;
   const pct=Math.round(best.sim*100);
@@ -937,27 +787,17 @@ function runRecognition(probe) {
   matchDist.className='match-dist '+(isMatch?'':'fail');
   matchDist.textContent='sim='+best.sim.toFixed(3);
   matchConfBar.style.display='';
-  matchConfFill.className='match-confidence-fill '+(pct>=Math.round(MATCH_THRESHOLD*100)?'high':pct>=55?'med':'low');
+  matchConfFill.className='match-confidence-fill '+(pct>=72?'high':pct>=55?'med':'low');
   matchConfFill.style.width=pct+'%';
   matchDesc.textContent=isMatch
     ?'Matched to '+best.name+' with '+pct+'% similarity.'
     :'Best candidate: '+best.name+' at '+pct+'% (below '+Math.round(MATCH_THRESHOLD*100)+'% threshold).';
 
-  // Show photo in match header
-  if(best.photo&&isMatch){
-    matchPhotoWrap.innerHTML='<img class="match-photo" src="'+best.photo+'" alt="'+best.name+'">';
-    matchPhotoWrap.className='';
-  } else {
-    matchPhotoWrap.innerHTML='👤';
-    matchPhotoWrap.className='match-photo-placeholder';
-  }
-
   candidateHdr.style.display=''; candidateList.style.display='';
   candidateList.innerHTML=scored.map(s=>{
     const p=Math.round(s.sim*100);
     const cls=s.sim>=MATCH_THRESHOLD?'':s.sim>=0.55?'near':'far';
-    const thumb=s.photo?'<img src="'+s.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">':'<div class="face-avatar" style="width:28px;height:28px;font-size:0.7rem;">'+s.name[0].toUpperCase()+'</div>';
-    return '<div class="face-card"><div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0;">'+thumb+'</div>'
+    return '<div class="face-card"><div class="face-avatar">'+s.name[0].toUpperCase()+'</div>'
       +'<div class="face-info"><div class="face-name">'+s.name+'</div>'
       +'<div class="face-meta">'+s.date+'</div></div>'
       +'<span class="face-distance '+cls+'">'+p+'%</span></div>';
@@ -980,22 +820,18 @@ function renderFacesList() {
     facesList.innerHTML='<div class="no-faces"><span class="no-faces-icon">👤</span>NO FACES ENROLLED YET<br>SCAN YOUR FACE TO BEGIN</div>';
     return;
   }
-  facesList.innerHTML=enrolledFaces.map((f,i)=>{
-    const samples=f.sampleCount||1;
-    const avatar=f.photo
-      ?'<div class="face-avatar"><img src="'+f.photo+'" alt="'+f.name+'"></div>'
-      :'<div class="face-avatar">'+f.name[0].toUpperCase()+'</div>';
-    return '<div class="face-card" id="fc-'+i+'">'
-      +avatar
-      +'<div class="face-info"><div class="face-name">'+f.name+'</div>'
-      +'<div class="face-meta">'+f.date+' · 468-pt mesh</div></div>'
-      +'<span class="face-samples">'+samples+' sample'+(samples!==1?'s':'')+'</span>'
-      +'<button class="btn-del" onclick="deleteFace('+i+')" title="Delete">✕</button></div>';
-  }).join('');
+  facesList.innerHTML=enrolledFaces.map((f,i)=>
+    '<div class="face-card" id="fc-'+i+'">'
+    +'<div class="face-avatar">'+f.name[0].toUpperCase()+'</div>'
+    +'<div class="face-info"><div class="face-name">'+f.name+'</div>'
+    +'<div class="face-meta">'+f.date+' · 468-pt mesh</div></div>'
+    +'<button class="btn-del" onclick="deleteFace('+i+')" title="Delete">✕</button></div>'
+  ).join('');
 }
 
 function deleteFace(i){const n=enrolledFaces[i].name;enrolledFaces.splice(i,1);saveToStorage();renderFacesList();showToast('🗑 Removed '+n);}
 function clearAll(){if(!confirm('Delete all enrolled faces?'))return;enrolledFaces=[];saveToStorage();renderFacesList();descPanel.classList.remove('visible');showToast('🗑 All faces cleared');}
+
 /* ═══════════════════════════════════════════════
    DESCRIPTOR COPY
 ═══════════════════════════════════════════════ */
@@ -1006,13 +842,7 @@ function copyArray(){if(!lastDescriptor)return;navigator.clipboard.writeText(JSO
    IMPORT / EXPORT
 ═══════════════════════════════════════════════ */
 function exportFaces(){
-  const blob=new Blob([JSON.stringify(enrolledFaces.map(f=>({
-    name:f.name,
-    descriptors:(f.descriptors||[f.descriptor].filter(Boolean)).map(d=>Array.from(d)),
-    photo:f.photo||null,
-    date:f.date,
-    sampleCount:f.sampleCount||1
-  })))],{type:'application/json'});
+  const blob=new Blob([JSON.stringify(enrolledFaces.map(f=>({name:f.name,descriptor:Array.from(f.descriptor),date:f.date})))],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='regis-mp-'+Date.now()+'.json';a.click();
   showToast('⬇ Exported '+enrolledFaces.length+' face(s)');
 }
@@ -1022,15 +852,7 @@ function importFaces(evt){
   reader.onload=e=>{
     try{
       const arr=JSON.parse(e.target.result);let cnt=0;
-      arr.forEach(item=>{
-        if(!item.name) return;
-        let descs=[];
-        if(item.descriptors&&item.descriptors.length) descs=item.descriptors.map(d=>new Float32Array(d));
-        else if(item.descriptor) descs=[new Float32Array(item.descriptor)];
-        if(!descs.length) return;
-        enrolledFaces.push({name:item.name,descriptors:descs,photo:item.photo||null,date:item.date||new Date().toLocaleString(),sampleCount:item.sampleCount||descs.length});
-        cnt++;
-      });
+      arr.forEach(item=>{if(item.name&&item.descriptor){enrolledFaces.push({name:item.name,descriptor:new Float32Array(item.descriptor),date:item.date||new Date().toLocaleString()});cnt++;}});
       saveToStorage();renderFacesList();showToast('⬆ Imported '+cnt+' face(s)');
     }catch{showToast('⚠ Invalid file format');}
   };
@@ -1040,38 +862,8 @@ function importFaces(evt){
 /* ═══════════════════════════════════════════════
    STORAGE
 ═══════════════════════════════════════════════ */
-function saveToStorage(){
-  try{
-    localStorage.setItem('regis-mp',JSON.stringify(enrolledFaces.map(f=>({
-      name:f.name,
-      descriptors:(f.descriptors||[f.descriptor].filter(Boolean)).map(d=>Array.from(d)),
-      photo:f.photo||null,
-      date:f.date,
-      sampleCount:f.sampleCount||1
-    }))));
-  }catch(e){}
-}
-function loadFromStorage(){
-  try{
-    const raw=localStorage.getItem('regis-mp');if(!raw)return;
-    JSON.parse(raw).forEach(item=>{
-      if(!item.name) return;
-      // Support both old format (descriptor) and new (descriptors)
-      let descs=[];
-      if(item.descriptors&&item.descriptors.length) descs=item.descriptors.map(d=>new Float32Array(d));
-      else if(item.descriptor) descs=[new Float32Array(item.descriptor)];
-      if(!descs.length) return;
-      enrolledFaces.push({
-        name:item.name,
-        descriptors:descs,
-        photo:item.photo||null,
-        date:item.date||'—',
-        sampleCount:item.sampleCount||descs.length
-      });
-    });
-    renderFacesList();
-  }catch(e){}
-}
+function saveToStorage(){try{localStorage.setItem('regis-mp',JSON.stringify(enrolledFaces.map(f=>({name:f.name,descriptor:Array.from(f.descriptor),date:f.date}))));}catch(e){}}
+function loadFromStorage(){try{const raw=localStorage.getItem('regis-mp');if(!raw)return;JSON.parse(raw).forEach(item=>{if(item.name&&item.descriptor)enrolledFaces.push({name:item.name,descriptor:new Float32Array(item.descriptor),date:item.date||'—'});});renderFacesList();}catch(e){}}
 
 /* ═══════════════════════════════════════════════
    BOOT
