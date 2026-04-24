@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regis AI — Face Recognition System</title>
+<script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #07080c;
+    --surface:  #0c0e16;
+    --panel:    #10131f;
+    --border:   rgba(255,255,255,0.06);
+    --cyan:     #00e5ff;
+    --green:    #00ffaa;
+    --amber:    #ffcc00;
+    --red:      #ff4466;
+    --violet:   #9b6dff;
+    --text:     #c8cce0;
+    --muted:    #3d4260;
+    --mono:     'Share Tech Mono', monospace;
+    --sans:     'Syne', sans-serif;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* Ambient background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 50% at 15% 5%,  rgba(0,229,255,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 60% at 85% 95%, rgba(155,109,255,0.06) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── TOP NAV ─── */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    background: rgba(7,8,12,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nav-logo {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    box-shadow: 0 0 18px rgba(0,229,255,0.25);
+    flex-shrink: 0;
+  }
+  .nav-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+  }
+  .nav-tag {
+    font-size: 0.6rem;
+    font-family: var(--mono);
+    color: var(--cyan);
+    background: rgba(0,229,255,0.08);
+    border: 1px solid rgba(0,229,255,0.2);
+    padding: 2px 7px;
+    border-radius: 20px;
+    letter-spacing: 0.07em;
+    vertical-align: middle;
+  }
+
+  /* Mode toggle tabs */
+  .mode-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .mode-tab {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.25s;
+    letter-spacing: 0.01em;
+  }
+  .mode-tab.active {
+    background: var(--cyan);
+    color: #000;
+    box-shadow: 0 0 16px rgba(0,229,255,0.3);
+  }
+
+  /* ─── MAIN LAYOUT ─── */
+  .main {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 900px;
+    padding: 24px 16px 48px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  /* Panels */
+  .pane {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .pane-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.015);
+  }
+  .pane-icon { font-size: 1rem; }
+  .pane-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .pane-sub {
+    font-size: 0.65rem;
+    font-family: var(--mono);
+    color: var(--muted);
+    margin-left: auto;
+    letter-spacing: 0.05em;
+  }
+
+  /* ─── LEFT: VIDEO PANE ─── */
+  .video-pane {
+    flex: 0 0 340px;
+    min-width: 0;
+  }
+  .video-body { padding: 16px; }
+
+  .video-wrap {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #000;
+    aspect-ratio: 4/3;
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+  video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scaleX(-1);
+  }
+  canvas.overlay {
+    position: absolute;
+    inset: 0;
+    transform: scaleX(-1);
+    pointer-events: none;
+  }
+
+  /* Corner brackets */
+  .video-wrap::before, .video-wrap::after,
+  .corner-bl, .corner-br {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    border-color: var(--cyan);
+    border-style: solid;
+    z-index: 10;
+    transition: border-color 0.4s;
+  }
+  .video-wrap::before { top: 8px; left: 8px; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
+  .video-wrap::after  { top: 8px; right: 8px; border-width: 2px 2px 0 0; border-radius: 0 4px 0 0; }
+  .corner-bl { bottom: 8px; left: 8px; border-width: 0 0 2px 2px; border-radius: 0 0 0 4px; }
+  .corner-br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
+
+  /* Scan line */
+  .scan-line {
+    position: absolute;
+    left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    top: 0; z-index: 9;
+    animation: scan 2.5s linear infinite;
+    opacity: 0.7;
+  }
+  .scan-line.paused { animation-play-state: paused; }
+  @keyframes scan {
+    0%   { top: 0%;   opacity: 0; }
+    5%   { opacity: 0.7; }
+    95%  { opacity: 0.7; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  /* Face ring */
+  .face-ring {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 115px; height: 135px;
+    border: 1.5px solid rgba(0,229,255,0.25);
+    border-radius: 50%;
+    z-index: 8;
+    pointer-events: none;
+    transition: border-color 0.3s;
+  }
+  .face-ring.detected { border-color: rgba(0,255,170,0.55); }
+
+  /* Step overlay flash */
+  .step-overlay {
+    position: absolute; inset: 0;
+    border-radius: 14px;
+    background: rgba(0,255,170,0.1);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 11;
+  }
+  @keyframes rippleIn {
+    0% { opacity: 1; } 100% { opacity: 0; }
+  }
+  .step-overlay.ripple { animation: rippleIn 0.5s ease-out forwards; }
+
+  /* ─── STATUS BOX ─── */
+  .status-box {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    min-height: 60px;
+    transition: border-color 0.4s;
+  }
+  .status-box.challenge { border-color: rgba(255,204,0,0.35); }
+  .status-box.success   { border-color: rgba(0,255,170,0.4);  }
+  .status-box.error     { border-color: rgba(255,68,102,0.4); }
+  .status-icon { font-size: 1.5rem; flex-shrink: 0; width: 30px; text-align: center; }
+  .status-text { flex: 1; }
+  .status-label {
+    font-size: 0.58rem;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .status-msg {
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #fff;
+  }
+  .status-msg.amber { color: var(--amber); }
+  .status-msg.green { color: var(--green); }
+  .status-msg.cyan  { color: var(--cyan);  }
+  .status-msg.red   { color: var(--red);   }
+  .status-msg.violet{ color: var(--violet);}
+
+  /* Enroll name input */
+  .enroll-form { display: flex; gap: 8px; margin-bottom: 0; }
+  .name-input {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: #fff;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.3s;
+    letter-spacing: 0.04em;
+  }
+  .name-input::placeholder { color: var(--muted); }
+  .name-input:focus { border-color: rgba(0,229,255,0.4); }
+
+  .btn-primary {
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--cyan), #00b4cc);
+    color: #000;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+  }
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+  .btn-secondary {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    letter-spacing: 0.01em;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.09); transform: translateY(-1px); }
+
+  /* ─── RIGHT: INFO PANE ─── */
+  .info-pane { flex: 1; min-width: 0; }
+  .info-body { padding: 16px; }
+
+  /* Known faces list */
+  .faces-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+    max-height: 320px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted) transparent;
+  }
+  .face-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.3s, background 0.3s;
+    animation: fadeSlide 0.3s ease-out both;
+  }
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .face-card.matched {
+    border-color: rgba(0,255,170,0.5);
+    background: rgba(0,255,170,0.04);
+  }
+  .face-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--violet), var(--cyan));
+    box-shadow: 0 0 12px rgba(155,109,255,0.3);
+    font-weight: 800;
+    color: #fff;
+    font-family: var(--sans);
+    font-size: 0.9rem;
+  }
+  .face-info { flex: 1; min-width: 0; }
+  .face-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .face-meta {
+    font-size: 0.62rem;
+    font-family: var(--mono);
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+  }
+  .face-distance {
+    font-size: 0.65rem;
+    font-family: var(--mono);
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: rgba(0,255,170,0.1);
+    color: var(--green);
+    border: 1px solid rgba(0,255,170,0.2);
+    white-space: nowrap;
+  }
+  .face-distance.far {
+    background: rgba(255,68,102,0.08);
+    color: var(--red);
+    border-color: rgba(255,68,102,0.2);
+  }
+  .face-distance.near {
+    background: rgba(255,204,0,0.08);
+    color: var(--amber);
+    border-color: rgba(255,204,0,0.2);
+  }
+  .btn-del {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px;
+    transition: color 0.2s;
+    line-height: 1;
+  }
+  .btn-del:hover { color: var(--red); }
+
+  .no-faces {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.8;
+  }
+  .no-faces-icon { font-size: 2.5rem; display: block; margin-bottom: 12px; opacity: 0.4; }
+
+  /* Result panel for recognition mode */
+  .match-result {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    display: none;
+    animation: fadeSlide 0.4s ease-out both;
+  }
+  .match-result.visible { display: block; }
+  .match-header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .match-header.success { background: rgba(0,255,170,0.07); border-color: rgba(0,255,170,0.2); }
+  .match-header.fail    { background: rgba(255,68,102,0.07); border-color: rgba(255,68,102,0.2); }
+  .match-label {
+    font-size: 0.65rem;
+    font-family: var(--mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .match-name {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #fff;
+  }
+  .match-dist {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    margin-left: auto;
+    padding: 3px 9px;
+    border-radius: 20px;
+    border: 1px solid rgba(0,255,170,0.25);
+    color: var(--green);
+  }
+  .match-dist.fail {
+    border-color: rgba(255,68,102,0.25);
+    color: var(--red);
+  }
+  .match-body {
+    padding: 12px 16px;
+    font-size: 0.78rem;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .match-confidence {
+    margin-top: 8px;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .match-confidence-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease-out;
+  }
+  .match-confidence-fill.high { background: var(--green); }
+  .match-confidence-fill.med  { background: var(--amber); }
+  .match-confidence-fill.low  { background: var(--red);   }
+
+  /* Descriptor output */
+  .descriptor-panel {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(0,255,170,0.15);
+    display: none;
+  }
+  .descriptor-panel.visible { display: block; }
+  .descriptor-header {
+    padding: 8px 12px;
+    background: rgba(0,255,170,0.06);
+    border-bottom: 1px solid rgba(0,255,170,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .descriptor-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .descriptor-body {
+    background: rgba(0,0,0,0.35);
+    padding: 10px 12px;
+    max-height: 80px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted) transparent;
+  }
+  .descriptor-text {
+    font-family: var(--mono);
+    font-size: 0.67rem;
+    color: rgba(0,255,170,0.8);
+    word-break: break-all;
+    white-space: pre-wrap;
+    line-height: 1.65;
+  }
+  .descriptor-actions {
+    padding: 8px 12px;
+    display: flex;
+    gap: 6px;
+    background: rgba(0,0,0,0.2);
+  }
+  .btn-copy {
+    flex: 1;
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--green), #00cc88);
+    color: #000;
+    border: none;
+    padding: 7px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    letter-spacing: 0.01em;
+  }
+  .btn-copy:hover { opacity: 0.85; }
+  .btn-copy-arr {
+    flex: 1;
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(0,255,170,0.07);
+    color: var(--green);
+    border: 1px solid rgba(0,255,170,0.2);
+    padding: 7px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.2s;
+    letter-spacing: 0.01em;
+  }
+  .btn-copy-arr:hover { background: rgba(0,255,170,0.13); }
+
+  /* Live recognition badge overlay on video */
+  .live-badge {
+    position: absolute;
+    top: 10px; right: 10px;
+    z-index: 12;
+    background: rgba(0,255,170,0.12);
+    border: 1px solid rgba(0,255,170,0.3);
+    color: var(--green);
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    padding: 3px 9px;
+    border-radius: 20px;
+    display: none;
+  }
+  .live-badge.visible { display: block; }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 14px 0;
+  }
+
+  /* Import/Export */
+  .io-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 0;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    background: rgba(15,17,26,0.95);
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    padding: 9px 18px;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 999;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Spinner */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--muted);
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Responsive */
+  @media (max-width: 680px) {
+    .main { flex-direction: column; }
+    .video-pane { flex: none; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-logo">⬡</div>
+    <div>
+      <span class="nav-title">Regis AI</span>
+      <span class="nav-tag">v2</span>
+    </div>
+  </div>
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tab-enroll"   onclick="switchMode('enroll')">➕ Enroll Face</button>
+    <button class="mode-tab"        id="tab-recognize" onclick="switchMode('recognize')">🔍 Recognize</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT: Video Pane -->
+  <div class="pane video-pane">
+    <div class="pane-header">
+      <span class="pane-icon">📷</span>
+      <span class="pane-title" id="video-pane-title">Enroll New Face</span>
+      <span class="pane-sub" id="video-pane-sub">FACE SCAN</span>
+    </div>
+    <div class="video-body">
+
+      <!-- Video -->
+      <div class="video-wrap" id="video-wrap">
+        <div class="scan-line" id="scan-line"></div>
+        <div class="face-ring" id="face-ring"></div>
+        <div class="corner-bl"></div>
+        <div class="corner-br"></div>
+        <div class="step-overlay" id="step-overlay"></div>
+        <div class="live-badge" id="live-badge">● LIVE</div>
+        <video id="video" autoplay muted playsinline></video>
+        <canvas class="overlay" id="overlay-canvas"></canvas>
+      </div>
+
+      <!-- Status -->
+      <div class="status-box" id="status-box">
+        <div class="status-icon" id="status-icon">⬡</div>
+        <div class="status-text">
+          <div class="status-label" id="status-label">SYSTEM</div>
+          <div class="status-msg cyan" id="status-msg">
+            <span class="spinner"></span>Loading neural models…
+          </div>
+        </div>
+      </div>
+
+      <!-- Enroll form -->
+      <div id="enroll-form-wrap" style="display:none;">
+        <div style="font-family:var(--mono);font-size:0.65rem;margin-bottom:8px;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,0.03);border:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+          <span id="face-detect-dot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block;flex-shrink:0;transition:background 0.3s;"></span>
+          <span id="face-detect-txt" style="color:var(--muted);letter-spacing:0.06em;">WAITING FOR FACE…</span>
+        </div>
+        <div class="enroll-form">
+          <input class="name-input" type="text" id="name-input" placeholder="Enter person's name…" maxlength="40" />
+          <button class="btn-primary" id="btn-enroll" onclick="startEnroll()" disabled>Scan</button>
+        </div>
+      </div>
+
+      <!-- Recognize button -->
+      <div id="recognize-btn-wrap" style="display:none;">
+        <button class="btn-primary" id="btn-recognize" onclick="startRecognize()" style="width:100%;">🔍 Identify Face</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT: Info Pane -->
+  <div class="pane info-pane">
+
+    <!-- ENROLL side -->
+    <div id="enroll-side">
+      <div class="pane-header">
+        <span class="pane-icon">🧬</span>
+        <span class="pane-title">Enrolled Faces</span>
+        <span class="pane-sub" id="face-count-label">0 FACES</span>
+      </div>
+      <div class="info-body">
+        <div class="faces-list" id="faces-list">
+          <div class="no-faces">
+            <span class="no-faces-icon">👤</span>
+            NO FACES ENROLLED YET<br>
+            SCAN YOUR FACE TO BEGIN
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Descriptor output -->
+        <div class="descriptor-panel" id="descriptor-panel">
+          <div class="descriptor-header">
+            <span class="descriptor-label">🧬 128-dim Face Vector</span>
+            <span class="descriptor-label" id="desc-name-label"></span>
+          </div>
+          <div class="descriptor-body">
+            <div class="descriptor-text" id="descriptor-text"></div>
+          </div>
+          <div class="descriptor-actions">
+            <button class="btn-copy"     onclick="copyString()">Copy String</button>
+            <button class="btn-copy-arr" onclick="copyArray()">Copy Array</button>
+          </div>
+        </div>
+
+        <div class="divider" id="io-divider"></div>
+
+        <!-- Import/Export -->
+        <div class="io-row">
+          <button class="btn-secondary" onclick="exportFaces()" style="flex:1;">⬇ Export DB</button>
+          <label class="btn-secondary" style="flex:1;text-align:center;cursor:pointer;">
+            ⬆ Import DB
+            <input type="file" accept=".json" onchange="importFaces(event)" style="display:none;">
+          </label>
+          <button class="btn-secondary" onclick="clearAll()" style="flex:1;color:var(--red);">🗑 Clear All</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECOGNIZE side -->
+    <div id="recognize-side" style="display:none;">
+      <div class="pane-header">
+        <span class="pane-icon">🔍</span>
+        <span class="pane-title">Recognition Result</span>
+        <span class="pane-sub">EUCLIDEAN DISTANCE</span>
+      </div>
+      <div class="info-body">
+        <div class="match-result" id="match-result">
+          <div class="match-header" id="match-header">
+            <div>
+              <div class="match-label" id="match-label">IDENTITY</div>
+              <div class="match-name" id="match-name">—</div>
+            </div>
+            <span class="match-dist" id="match-dist">d=—</span>
+          </div>
+          <div class="match-body">
+            <div id="match-desc">Run a scan to identify the person in frame.</div>
+            <div class="match-confidence" id="match-conf-bar" style="display:none;">
+              <div class="match-confidence-fill" id="match-conf-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- All candidates sorted by distance -->
+        <div class="pane-header" style="border-radius:10px 10px 0 0; border-bottom:1px solid var(--border); margin-bottom:0; display:none;" id="candidates-header">
+          <span class="pane-icon">📊</span>
+          <span class="pane-title">All Comparisons</span>
+        </div>
+        <div class="faces-list" id="candidates-list" style="display:none;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+const MATCH_THRESHOLD   = 0.45;  // Stricter threshold for better accuracy
+const DETECT_INTERVAL   = 80;    // ms between detections (faster)
+
+let mode          = 'enroll';   // 'enroll' | 'recognize'
+let isCapturing   = false;
+let enrolledFaces = [];          // [{name, descriptor:Float32Array, date}]
+let lastDescriptor= null;
+let lastProcessed = 0;
+let modelsReady   = false;
+let faceDetected  = false;
+
+/* ═══════════════════════════════════════════════
+   DOM REFS
+═══════════════════════════════════════════════ */
+const video        = document.getElementById('video');
+const statusBox    = document.getElementById('status-box');
+const statusIcon   = document.getElementById('status-icon');
+const statusLabel  = document.getElementById('status-label');
+const statusMsg    = document.getElementById('status-msg');
+
+const videoWrap    = document.getElementById('video-wrap');
+const stepOverlay  = document.getElementById('step-overlay');
+const scanLine     = document.getElementById('scan-line');
+const faceRing     = document.getElementById('face-ring');
+const liveBadge    = document.getElementById('live-badge');
+const facesList    = document.getElementById('faces-list');
+const nameInput    = document.getElementById('name-input');
+const btnEnroll    = document.getElementById('btn-enroll');
+const enrollForm   = document.getElementById('enroll-form-wrap');
+const recogBtnWrap = document.getElementById('recognize-btn-wrap');
+const descPanel    = document.getElementById('descriptor-panel');
+const descText     = document.getElementById('descriptor-text');
+const descNameLbl  = document.getElementById('desc-name-label');
+const faceCountLbl = document.getElementById('face-count-label');
+const matchResult  = document.getElementById('match-result');
+const matchHeader  = document.getElementById('match-header');
+const matchLabel   = document.getElementById('match-label');
+const matchName    = document.getElementById('match-name');
+const matchDist    = document.getElementById('match-dist');
+const matchDesc    = document.getElementById('match-desc');
+const matchConfBar = document.getElementById('match-conf-bar');
+const matchConfFill= document.getElementById('match-conf-fill');
+const candidateHdr = document.getElementById('candidates-header');
+const candidateList= document.getElementById('candidates-list');
+const toast        = document.getElementById('toast');
+const enrollSide   = document.getElementById('enroll-side');
+const recognizeSide= document.getElementById('recognize-side');
+const ioDiv        = document.getElementById('io-divider');
+
+/* ═══════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════ */
+function showToast(msg, dur=2200) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), dur);
+}
+
+/* ═══════════════════════════════════════════════
+   STATUS
+═══════════════════════════════════════════════ */
+function setStatus({ box='', label='SYSTEM', icon='⬡', msg='', cls='cyan' }) {
+  statusBox.className = `status-box ${box}`;
+  statusLabel.textContent = label;
+  statusIcon.textContent = icon;
+  statusMsg.className = `status-msg ${cls}`;
+  statusMsg.innerHTML = msg;
+}
+
+/* ═══════════════════════════════════════════════
+   MODE SWITCH
+═══════════════════════════════════════════════ */
+function switchMode(m) {
+  mode = m;
+  document.getElementById('tab-enroll').classList.toggle('active',    m==='enroll');
+  document.getElementById('tab-recognize').classList.toggle('active', m==='recognize');
+  document.getElementById('video-pane-title').textContent = m==='enroll' ? 'Enroll New Face' : 'Live Recognition';
+  document.getElementById('video-pane-sub').textContent   = m==='enroll' ? 'FACE SCAN' : 'REAL-TIME SCAN';
+  enrollSide.style.display    = m==='enroll'    ? '' : 'none';
+  recognizeSide.style.display = m==='recognize' ? '' : 'none';
+  enrollForm.style.display    = m==='enroll'    ? '' : 'none';
+  recogBtnWrap.style.display  = m==='recognize' ? '' : 'none';
+
+  // Reset state
+  isCapturing = false;
+  liveBadge.classList.remove('visible');
+  scanLine.classList.remove('paused');
+
+  if (m === 'enroll') {
+    setStatus({ label:'READY', icon:'⬡', msg:'Enter a name and press <strong>Scan</strong> to begin', cls:'cyan' });
+    nameInput.disabled = false;
+    btnEnroll.disabled = !nameInput.value.trim();
+  } else {
+    if (enrolledFaces.length === 0) {
+      setStatus({ box:'error', label:'NO FACES', icon:'⚠', msg:'Enroll at least one face first before recognizing.', cls:'red' });
+    } else {
+      setStatus({ label:'READY', icon:'🔍', msg:`Press <strong>Identify Face</strong> — ${enrolledFaces.length} face(s) loaded`, cls:'cyan' });
+    }
+    matchResult.classList.remove('visible');
+    candidateHdr.style.display = 'none';
+    candidateList.style.display = 'none';
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   ENROLL FLOW
+═══════════════════════════════════════════════ */
+nameInput.addEventListener('input', () => {
+  btnEnroll.disabled = !nameInput.value.trim() || isCapturing;
+});
+
+async function startEnroll() {
+  if (!modelsReady) { showToast('⚠ Models not ready yet'); return; }
+  const name = nameInput.value.trim();
+  if (!name) { showToast('⚠ Please enter a name first'); return; }
+
+  // Ensure video is actually playing
+  if (video.paused || video.readyState < 2) {
+    showToast('⚠ Camera not ready, please wait…');
+    try {
+      await video.play();
+    } catch(e) {
+      setStatus({ box:'error', label:'CAMERA ERROR', icon:'⚠', msg:'Camera stream not active. Please refresh and allow camera access.', cls:'red' });
+      return;
+    }
+  }
+
+  // Check face is visible before starting
+  if (!faceDetected) {
+    setStatus({ box:'error', label:'NO FACE', icon:'⚠', msg:'No face detected in frame. Please position your face in the circle and try again.', cls:'red' });
+    showToast('⚠ Position your face in the frame first');
+    return;
+  }
+
+  isCapturing  = true;
+  lastDescriptor = null;
+  btnEnroll.disabled = true;
+  nameInput.disabled = true;
+  descPanel.classList.remove('visible');
+
+  scanLine.classList.remove('paused');
+  onEnrollComplete();
+}
+
+async function onEnrollComplete() {
+  setStatus({ label:'SCANNING', icon:'⬡', msg:'<span class="spinner"></span>Capturing biometric descriptor…', cls:'cyan' });
+
+  // Capture multiple samples and average for better accuracy
+  const descriptors = [];
+  const MAX_ATTEMPTS = 8;
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    await new Promise(r => setTimeout(r, 200));
+    if (video.paused || video.readyState < 2) continue;
+
+    let result = await faceapi
+      .detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.45 }))
+      .withFaceLandmarks()
+      .withFaceDescriptor();
+
+    if (!result) {
+      result = await faceapi
+        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.35 }))
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+    }
+    if (result) {
+      descriptors.push(result.descriptor);
+      // Flash ring green on each capture
+      faceRing.className = 'face-ring detected';
+      // Update progress in status
+      setStatus({ label:'SCANNING', icon:'⬡', msg:`<span class="spinner"></span>Capturing… ${descriptors.length}/${Math.min(5, MAX_ATTEMPTS)} samples`, cls:'cyan' });
+      if (descriptors.length >= 5) break; // enough samples
+    }
+  }
+
+  if (descriptors.length > 0) {
+    // Average all captured descriptors for robustness
+    const avgDescriptor = averageDescriptors(descriptors);
+    const name = nameInput.value.trim();
+    const entry = { name, descriptor: avgDescriptor, date: new Date().toLocaleString(), samples: descriptors.length };
+    enrolledFaces.push(entry);
+    lastDescriptor = avgDescriptor;
+    saveToStorage();
+    renderFacesList();
+    showDescriptor(avgDescriptor, name);
+    // Ripple flash
+    stepOverlay.classList.remove('ripple');
+    void stepOverlay.offsetWidth;
+    stepOverlay.classList.add('ripple');
+    setStatus({ box:'success', label:'ENROLLED ✓', icon:'🧬', msg:`<strong>${name}</strong> enrolled successfully (${descriptors.length} samples averaged)`, cls:'green' });
+    showToast(`✓ ${name} enrolled with ${descriptors.length} samples!`);
+  } else {
+    setStatus({ box:'error', label:'CAPTURE FAILED', icon:'⚠', msg:'No face detected. Ensure good lighting, face the camera directly, and try again.', cls:'red' });
+    showToast('⚠ No face detected — check lighting & position');
+  }
+
+  isCapturing = false;
+  nameInput.disabled = false;
+  btnEnroll.disabled = !nameInput.value.trim();
+  scanLine.classList.add('paused');
+}
+
+function averageDescriptors(descriptors) {
+  const len = descriptors[0].length;
+  const avg = new Float32Array(len);
+  for (const d of descriptors) {
+    for (let i = 0; i < len; i++) avg[i] += d[i];
+  }
+  for (let i = 0; i < len; i++) avg[i] /= descriptors.length;
+  return avg;
+}
+
+/* ═══════════════════════════════════════════════
+   RECOGNIZE FLOW
+═══════════════════════════════════════════════ */
+async function startRecognize() {
+  if (!modelsReady || enrolledFaces.length === 0) return;
+  setStatus({ label:'SCANNING…', icon:'🔍', msg:'<span class="spinner"></span>Analyzing face biometrics…', cls:'cyan' });
+  document.getElementById('btn-recognize').disabled = true;
+
+  // Capture 3 samples and average for robust recognition
+  const descriptors = [];
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) await new Promise(r => setTimeout(r, 120));
+    let result = await faceapi
+      .detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
+      .withFaceLandmarks()
+      .withFaceDescriptor();
+
+    if (!result) {
+      result = await faceapi
+        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.38 }))
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+    }
+    if (result) descriptors.push(result.descriptor);
+  }
+
+  if (descriptors.length === 0) {
+    setStatus({ box:'error', label:'NO FACE', icon:'⚠', msg:'Could not detect a face. Ensure good lighting and face the camera directly.', cls:'red' });
+    document.getElementById('btn-recognize').disabled = false;
+    return;
+  }
+
+  // Use averaged descriptor for comparison
+  const queryDesc = descriptors.length > 1 ? averageDescriptors(descriptors) : descriptors[0];
+
+  // Compute Euclidean distance to all enrolled faces
+  const distances = enrolledFaces.map(f => ({
+    name:       f.name,
+    date:       f.date,
+    distance:   faceapi.euclideanDistance(queryDesc, f.descriptor)
+  }));
+  distances.sort((a,b) => a.distance - b.distance);
+  const best = distances[0];
+
+  showRecognitionResult(best, distances, descriptors.length);
+  document.getElementById('btn-recognize').disabled = false;
+}
+
+function showRecognitionResult(best, all, samplesUsed) {
+  const matched = best.distance <= MATCH_THRESHOLD;
+
+  matchResult.classList.add('visible');
+  matchHeader.className = `match-header ${matched ? 'success' : 'fail'}`;
+  matchLabel.textContent = matched ? 'IDENTIFIED AS' : 'UNKNOWN PERSON';
+  matchName.textContent  = matched ? best.name : 'No Match Found';
+  matchDist.textContent  = `d=${best.distance.toFixed(3)}`;
+  matchDist.className    = `match-dist ${matched ? '' : 'fail'}`;
+
+  // Confidence bar (inverted: lower distance = higher confidence)
+  const conf = matched ? Math.max(0, Math.min(100, (1 - best.distance / MATCH_THRESHOLD) * 100)) : 0;
+  matchConfBar.style.display = 'block';
+  matchConfFill.style.width  = conf + '%';
+  matchConfFill.className    = `match-confidence-fill ${conf > 65 ? 'high' : conf > 35 ? 'med' : 'low'}`;
+
+  if (matched) {
+    matchDesc.innerHTML = `Match confidence: <strong style="color:var(--green)">${conf.toFixed(0)}%</strong> &nbsp;·&nbsp; Enrolled: ${best.date} &nbsp;·&nbsp; <span style="color:var(--muted);font-size:0.72rem">${samplesUsed} sample(s) analyzed</span>`;
+    setStatus({ box:'success', label:'MATCH FOUND', icon:'✅', msg:`Identified as <strong>${best.name}</strong>`, cls:'green' });
+  } else {
+    matchDesc.innerHTML = `Closest: <strong>${best.name}</strong> (d=${best.distance.toFixed(3)}) — threshold ${MATCH_THRESHOLD} &nbsp;·&nbsp; <span style="color:var(--muted);font-size:0.72rem">${samplesUsed} sample(s)</span>`;
+    setStatus({ box:'error', label:'NOT RECOGNIZED', icon:'🚫', msg:'This person is not in the enrolled database.', cls:'red' });
+  }
+
+  // Show all candidates
+  candidateHdr.style.display = '';
+  candidateList.style.display = '';
+  candidateList.innerHTML = '';
+  all.forEach((c,i) => {
+    const isMatch = c.distance <= MATCH_THRESHOLD;
+    const el = document.createElement('div');
+    el.className = `face-card ${i===0 && matched ? 'matched' : ''}`;
+    const distClass = isMatch ? '' : c.distance < MATCH_THRESHOLD*1.3 ? 'near' : 'far';
+    el.innerHTML = `
+      <div class="face-avatar">${c.name.charAt(0).toUpperCase()}</div>
+      <div class="face-info">
+        <div class="face-name">${c.name}</div>
+        <div class="face-meta">RANK ${i+1} · ${c.date}</div>
+      </div>
+      <span class="face-distance ${distClass}">d=${c.distance.toFixed(4)}</span>
+    `;
+    candidateList.appendChild(el);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   RENDER FACES LIST
+═══════════════════════════════════════════════ */
+function renderFacesList() {
+  faceCountLbl.textContent = `${enrolledFaces.length} FACE${enrolledFaces.length!==1?'S':''}`;
+  if (enrolledFaces.length === 0) {
+    facesList.innerHTML = `<div class="no-faces"><span class="no-faces-icon">👤</span>NO FACES ENROLLED YET<br>SCAN YOUR FACE TO BEGIN</div>`;
+    descPanel.classList.remove('visible');
+    ioDiv.style.display = 'none';
+    return;
+  }
+  ioDiv.style.display = '';
+  facesList.innerHTML = '';
+  enrolledFaces.forEach((f, idx) => {
+    const el = document.createElement('div');
+    el.className = 'face-card';
+    el.innerHTML = `
+      <div class="face-avatar">${f.name.charAt(0).toUpperCase()}</div>
+      <div class="face-info">
+        <div class="face-name">${f.name}</div>
+        <div class="face-meta">ENROLLED · ${f.date}</div>
+      </div>
+      <button class="btn-del" onclick="deleteFace(${idx})" title="Remove">✕</button>
+    `;
+    // Click to show descriptor
+    el.addEventListener('click', e => {
+      if (e.target.classList.contains('btn-del')) return;
+      showDescriptor(f.descriptor, f.name);
+    });
+    facesList.appendChild(el);
+  });
+}
+
+function deleteFace(idx) {
+  const name = enrolledFaces[idx].name;
+  enrolledFaces.splice(idx, 1);
+  saveToStorage();
+  renderFacesList();
+  showToast(`🗑 Removed ${name}`);
+}
+
+function clearAll() {
+  if (enrolledFaces.length === 0) return;
+  if (!confirm('Remove ALL enrolled faces?')) return;
+  enrolledFaces = [];
+  saveToStorage();
+  renderFacesList();
+  showToast('🗑 All faces cleared');
+}
+
+/* ═══════════════════════════════════════════════
+   DESCRIPTOR DISPLAY
+═══════════════════════════════════════════════ */
+function showDescriptor(descriptor, name) {
+  descPanel.classList.add('visible');
+  descNameLbl.textContent = name.toUpperCase();
+  const arr = Array.from(descriptor);
+  let fmt = '';
+  for (let i = 0; i < arr.length; i += 8) {
+    fmt += arr.slice(i, i+8).map(v => v.toFixed(5)).join('  ') + '\n';
+  }
+  descText.textContent = fmt.trim();
+  lastDescriptor = descriptor;
+}
+
+function copyString() {
+  if (!lastDescriptor) return;
+  navigator.clipboard.writeText(Array.from(lastDescriptor).join(',')).then(() => showToast('✓ Copied as comma-string'));
+}
+function copyArray() {
+  if (!lastDescriptor) return;
+  navigator.clipboard.writeText(JSON.stringify(Array.from(lastDescriptor))).then(() => showToast('✓ Copied as JSON array'));
+}
+
+/* ═══════════════════════════════════════════════
+   IMPORT / EXPORT
+═══════════════════════════════════════════════ */
+function exportFaces() {
+  if (enrolledFaces.length === 0) { showToast('⚠ Nothing to export'); return; }
+  const data = enrolledFaces.map(f => ({
+    name: f.name,
+    descriptor: Array.from(f.descriptor),
+    date: f.date
+  }));
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `regis-faces-${Date.now()}.json`;
+  a.click();
+  showToast(`⬇ Exported ${enrolledFaces.length} face(s)`);
+}
+
+function importFaces(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const arr = JSON.parse(e.target.result);
+      let count = 0;
+      arr.forEach(item => {
+        if (item.name && item.descriptor && item.descriptor.length === 128) {
+          enrolledFaces.push({
+            name: item.name,
+            descriptor: new Float32Array(item.descriptor),
+            date: item.date || new Date().toLocaleString()
+          });
+          count++;
+        }
+      });
+      saveToStorage();
+      renderFacesList();
+      showToast(`⬆ Imported ${count} face(s)`);
+    } catch {
+      showToast('⚠ Invalid file format');
+    }
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
+}
+
+/* ═══════════════════════════════════════════════
+   LOCALSTORAGE PERSISTENCE
+═══════════════════════════════════════════════ */
+function saveToStorage() {
+  try {
+    const data = enrolledFaces.map(f => ({
+      name: f.name,
+      descriptor: Array.from(f.descriptor),
+      date: f.date
+    }));
+    localStorage.setItem('regis-faces', JSON.stringify(data));
+  } catch(e) {}
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem('regis-faces');
+    if (!raw) return;
+    const arr = JSON.parse(raw);
+    arr.forEach(item => {
+      if (item.name && item.descriptor && item.descriptor.length === 128) {
+        enrolledFaces.push({
+          name: item.name,
+          descriptor: new Float32Array(item.descriptor),
+          date: item.date || '—'
+        });
+      }
+    });
+    renderFacesList();
+  } catch(e) {}
+}
+
+/* ═══════════════════════════════════════════════
+   CONTINUOUS FACE DETECTION LOOP
+═══════════════════════════════════════════════ */
+async function processFrame(ts) {
+  if (ts - lastProcessed > DETECT_INTERVAL) {
+    lastProcessed = ts;
+    await tickDetect();
+  }
+  requestAnimationFrame(processFrame);
+}
+
+async function tickDetect() {
+  if (!modelsReady || video.paused || video.readyState < 2) return;
+  try {
+    let result = await faceapi
+      .detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.3 }))
+      .withFaceLandmarks();
+
+    // Fallback to TinyFaceDetector if SSD misses
+    if (!result) {
+      result = await faceapi
+        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.35 }))
+        .withFaceLandmarks();
+    }
+
+    faceDetected = !!result;
+    faceRing.className = `face-ring ${faceDetected ? 'detected' : ''}`;
+
+    // Update face detection indicator
+    const dot = document.getElementById('face-detect-dot');
+    const txt = document.getElementById('face-detect-txt');
+    if (dot && txt) {
+      dot.style.background = faceDetected ? 'var(--green)' : 'var(--muted)';
+      dot.style.boxShadow  = faceDetected ? '0 0 6px var(--green)' : 'none';
+      txt.style.color      = faceDetected ? 'var(--green)' : 'var(--muted)';
+      txt.textContent      = faceDetected ? 'FACE DETECTED — READY TO SCAN' : 'WAITING FOR FACE…';
+    }
+
+    // Update btnEnroll hint color based on face detection
+    if (modelsReady && mode === 'enroll') {
+      btnEnroll.style.background = faceDetected
+        ? 'linear-gradient(135deg,#00ffaa,#00cc88)'
+        : 'linear-gradient(135deg,var(--cyan),#00b4cc)';
+    }
+  } catch(e) { /* ignore frame errors */ }
+}
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+async function init() {
+  const MODEL_URL = 'https://sarohanm.github.io/Face/';
+  const CDN       = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+
+  setStatus({ label:'LOADING', icon:'⬡', msg:'<span class="spinner"></span>Loading neural models…', cls:'cyan' });
+
+  try {
+    // Try hosted models first, fall back to CDN
+    try {
+      await Promise.all([
+        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+      ]);
+    } catch {
+      await Promise.all([
+        faceapi.nets.ssdMobilenetv1.loadFromUri(CDN),
+        faceapi.nets.faceLandmark68Net.loadFromUri(CDN),
+        faceapi.nets.faceRecognitionNet.loadFromUri(CDN),
+      ]);
+    }
+  } catch(e) {
+    setStatus({ box:'error', label:'MODEL ERROR', icon:'⚠', msg:'Failed to load AI models. Check your connection.', cls:'red' });
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'user', width:{ ideal:640 }, height:{ ideal:480 } } });
+    video.srcObject = stream;
+    await new Promise((resolve, reject) => {
+      video.onloadedmetadata = async () => {
+        try { await video.play(); resolve(); } catch(e) { reject(e); }
+      };
+      video.onerror = reject;
+    });
+    // Resize overlay canvas to match actual video size
+    const overlayCanvas = document.getElementById('overlay-canvas');
+    overlayCanvas.width  = video.videoWidth  || 640;
+    overlayCanvas.height = video.videoHeight || 480;
+  } catch(e) {
+    setStatus({ box:'error', label:'CAMERA ERROR', icon:'⚠', msg:'Camera access denied or unavailable. Allow camera permissions and refresh.', cls:'red' });
+    return;
+  }
+
+  modelsReady = true;
+  loadFromStorage();
+  renderFacesList();
+
+  setStatus({ label:'READY', icon:'⬡', msg:'Enter a name and press <strong>Scan</strong> to begin', cls:'cyan' });
+  enrollForm.style.display = '';
+  btnEnroll.disabled = true;
+
+  requestAnimationFrame(processFrame);
+}
+
+/* Wait for face-api.js deferred load */
+function waitForFaceApi(cb, retries=60) {
+  if (typeof faceapi !== 'undefined') { cb(); return; }
+  if (retries <= 0) {
+    setStatus({ box:'error', label:'LOAD ERROR', icon:'⚠', msg:'face-api.js failed to load.', cls:'red' });
+    return;
+  }
+  setTimeout(() => waitForFaceApi(cb, retries-1), 100);
+}
+
+waitForFaceApi(init);
+</script>
+</body>
+</html>
