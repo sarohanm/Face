@@ -963,13 +963,6 @@ async function startEnroll() {
     }
   }
 
-  // Check face is visible before starting
-  if (!faceDetected) {
-    setStatus({ box:'error', label:'NO FACE', icon:'⚠', msg:'No face detected in frame. Please position your face in the circle and try again.', cls:'red' });
-    showToast('⚠ Position your face in the frame first');
-    return;
-  }
-
   isCapturing  = true;
   lastDescriptor = null;
   btnEnroll.disabled = true;
@@ -985,20 +978,23 @@ async function onEnrollComplete() {
 
   // Capture multiple samples and average for better accuracy
   const descriptors = [];
-  const MAX_ATTEMPTS = 8;
+  const MAX_ATTEMPTS = 15;
+
+  // Give video a moment to produce a fresh frame
+  await new Promise(r => setTimeout(r, 400));
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise(r => setTimeout(r, 300));
     if (video.paused || video.readyState < 2) continue;
 
     let result = await faceapi
-      .detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.45 }))
+      .detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.25 }))
       .withFaceLandmarks()
       .withFaceDescriptor();
 
     if (!result) {
       result = await faceapi
-        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.35 }))
+        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.25 }))
         .withFaceLandmarks()
         .withFaceDescriptor();
     }
@@ -1009,6 +1005,8 @@ async function onEnrollComplete() {
       // Update progress in status
       setStatus({ label:'SCANNING', icon:'⬡', msg:`<span class="spinner"></span>Capturing… ${descriptors.length}/${Math.min(5, MAX_ATTEMPTS)} samples`, cls:'cyan' });
       if (descriptors.length >= 5) break; // enough samples
+    } else {
+      setStatus({ label:'SCANNING', icon:'⬡', msg:`<span class="spinner"></span>Looking for face… attempt ${attempt+1}/${MAX_ATTEMPTS}`, cls:'cyan' });
     }
   }
 
@@ -1062,13 +1060,13 @@ async function startRecognize() {
   for (let attempt = 0; attempt < 3; attempt++) {
     if (attempt > 0) await new Promise(r => setTimeout(r, 120));
     let result = await faceapi
-      .detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
+      .detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.3 }))
       .withFaceLandmarks()
       .withFaceDescriptor();
 
     if (!result) {
       result = await faceapi
-        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.38 }))
+        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.28 }))
         .withFaceLandmarks()
         .withFaceDescriptor();
     }
@@ -1310,13 +1308,13 @@ async function tickDetect() {
   if (!modelsReady || video.paused || video.readyState < 2) return;
   try {
     let result = await faceapi
-      .detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.3 }))
+      .detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.25 }))
       .withFaceLandmarks();
 
     // Fallback to TinyFaceDetector if SSD misses
     if (!result) {
       result = await faceapi
-        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.35 }))
+        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.28 }))
         .withFaceLandmarks();
     }
 
@@ -1358,12 +1356,14 @@ async function init() {
         faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
         faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
         faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
       ]);
     } catch {
       await Promise.all([
         faceapi.nets.ssdMobilenetv1.loadFromUri(CDN),
         faceapi.nets.faceLandmark68Net.loadFromUri(CDN),
         faceapi.nets.faceRecognitionNet.loadFromUri(CDN),
+        faceapi.nets.tinyFaceDetector.loadFromUri(CDN),
       ]);
     }
   } catch(e) {
